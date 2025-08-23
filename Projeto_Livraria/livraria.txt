@@ -1,0 +1,42 @@
+'''Descrição do Projeto
+Este sistema deve simular um controle básico de uma livraria.
+• Cadastrar múltiplos livros (com título, autor, preço e estoque).
+• Listar os livros cadastrados com informações detalhadas.
+• Realizar vendas escolhendo o livro pelo índice e quantidade desejada.
+• Calcular valor total, aplicar desconto (constante) e atualizar o estoque.
+• Validar entradas e tipos de dados usando isinstance() e conversões.
+• Mostrar resumo da venda e estado do estoque após cada operação.
+Requisitos e Conceitos a Utilizar
+1. Constantes
+o Criar uma constante para o percentual de desconto aplicado em toda venda
+(DESCONTO_PADRAO = (mesma % que a SELIC do mês).
+2. Variáveis e Tipos de Dados
+o Armazenar dados de cada livro (título, autor, preço e quantidade em estoque) usando
+variáveis adequadas (str, float, int).
+3. Entrada e Conversão
+o Utilizar input() para cadastrar livros e converter para os tipos corretos com float() e
+int().
+4. Estruturas Condicionais
+o Verificar se há livros cadastrados antes de listar.
+o Impedir venda se a quantidade desejada for maior que o estoque.
+o Aplicar desconto apenas se o valor bruto ultrapassar R$ 100,00.
+5. Operadores de Atribuição
+o Atualizar o estoque após cada venda usando -=.
+6. Validação de Tipos
+o Usar isinstance() para confirmar que o preço é float e a quantidade é int.
+7. Formatação e Saída
+o Exibir valores monetários com duas casas decimais (:.2f).
+o Mostrar mensagens claras e organizadas para o usuário.'''
+
+'''
+1 - Compreender pedido
+2 - Organizar o plano
+3 - Fechar acordo
+4 - Execução Planejamento:
+-Estrutura dos dados/Modelagem dos dados/Definir ferramentas
+-Sintaxe
+-Integração de Sistema
+-COntainer (bugs)
+-Deploy/Versionamento
+5 - Teste e Melhoria
+6 -  Entrega e Ralatorio Final'''
