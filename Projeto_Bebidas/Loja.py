@@ -62,7 +62,6 @@ def listar_bebidas():
     if not estoque_bebidas:
         print("Nenhuma bebida cadastrada no momento.")
     else:
-        # MODIFICAÇÃO: Usamos start=1 para a lista começar em 1 para o usuário.
         for i, bebida in enumerate(estoque_bebidas, start=1):
             print(f"[{i}] - Nome: {bebida['nome']} ({bebida['marca']})")
             print(f"      Tipo: {bebida['tipo']}")
