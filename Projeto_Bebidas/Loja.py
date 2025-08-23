@@ -1,11 +1,7 @@
-# Etapa 1: Constantes (sem alteração)
 DESCONTO_PADRAO = 0.105
 VALOR_MINIMO_DESCONTO = 100.00
 
-# Etapa 2: Estrutura de dados para o estoque de bebidas
 estoque_bebidas = []
-
-# Etapa 3: Funções de validação e utilitárias (sem alteração)
 
 def validar_float(mensagem):
     """Solicita um número de ponto flutuante (float) ao usuário, tratando erros."""
@@ -37,7 +33,6 @@ def pausar():
     """Pausa a execução do programa até que o usuário pressione ENTER."""
     input("\nPressione ENTER para continuar...")
 
-# Etapa 4: Cadastro de bebidas (sem alteração)
 def cadastrar_bebida():
     """Função para cadastrar uma nova bebida no estoque."""
     print("\n--- Cadastro de Bebida ---")
@@ -61,7 +56,6 @@ def cadastrar_bebida():
     print(f"\nBebida '{nome}' cadastrada com sucesso!")
     pausar()
 
-# Etapa 5: Listagem de bebidas (Refatorado para começar em 1)
 def listar_bebidas():
     """Função para exibir todas as bebidas cadastradas no estoque."""
     print("\n--- Estoque de Bebidas ---")
@@ -78,7 +72,6 @@ def listar_bebidas():
             print("-" * 25)
     pausar()
 
-# Etapa 7: Resumo da venda (sem alteração na lógica interna)
 def resumo_venda(carrinho):
     """Exibe o resumo da compra, calcula descontos e atualiza o estoque."""
     print("\n--- Resumo da Venda ---")
@@ -110,7 +103,6 @@ def resumo_venda(carrinho):
     print("\nVenda finalizada com sucesso!")
     pausar()
 
-# Etapa 6: Venda de bebidas (Refatorado para começar em 1)
 def vender_bebidas():
     """Função para realizar a venda de uma ou mais bebidas."""
     print("\n--- Venda de Bebidas ---")
@@ -120,7 +112,6 @@ def vender_bebidas():
         return
 
     print("Bebidas disponíveis:")
-    # MODIFICAÇÃO: Usamos start=1 para a lista começar em 1 para o usuário.
     for i, bebida in enumerate(estoque_bebidas, start=1):
         print(f"[{i}] {bebida['nome']} - Estoque: {bebida['estoque']} - R$ {bebida['preco']:.2f}")
     
@@ -131,9 +122,7 @@ def vender_bebidas():
             if indice_str == "":
                 break
             try:
-                # O número que o usuário digita (1, 2, 3...)
                 indice_usuario = int(indice_str)
-                # MODIFICAÇÃO: Validamos se o número está no intervalo de 1 até o total de bebidas.
                 if 1 <= indice_usuario <= len(estoque_bebidas):
                     break
                 else:
@@ -144,7 +133,6 @@ def vender_bebidas():
         if indice_str == "":
             break
 
-        # MODIFICAÇÃO: Convertemos o índice do usuário (1-based) para o índice da lista (0-based)
         indice_lista = indice_usuario - 1
         bebida_selecionada = estoque_bebidas[indice_lista]
         
@@ -176,7 +164,6 @@ def vender_bebidas():
         print("Nenhum item no carrinho. Venda cancelada.")
         pausar()
 
-# Etapa 8: Menu principal (sem alteração)
 def menu_principal():
     """Exibe o menu principal e gerencia a navegação do usuário."""
     while True:
@@ -201,6 +188,5 @@ def menu_principal():
             print("Opção inválida. Por favor, escolha uma opção de 1 a 4.")
             pausar()
 
-# Etapa 9: Execução do programa
 if __name__ == "__main__":
     menu_principal()
