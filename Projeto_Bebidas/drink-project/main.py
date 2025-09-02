@@ -220,8 +220,6 @@ def sua_sorte():
                 else:
                     print(f"Que pena, você errou, o numero era {n}, tente novamente na próxima")
                 t = True
-        else:
-            print(f"Insira um numero válido, tem que ser {type(n)}")
     else:
         print("Você já testou sua sorte, tente novamente outra vez")
 
