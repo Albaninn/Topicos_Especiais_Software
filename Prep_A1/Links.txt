@@ -1,0 +1,4 @@
+https://www.kaggle.com/datasets/metawave/vehicle-price-prediction/data
+https://www.kaggle.com/datasets/ahmadrazakashif/salary-data
+https://www.kaggle.com/datasets/paulogladson/bacen-dolarptax
+https://www.kaggle.com/datasets/adaoduque/campeonato-brasileiro-de-futebol
