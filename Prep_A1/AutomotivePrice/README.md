@@ -29,18 +29,19 @@ Siga os passos abaixo para configurar e executar a análise em seu ambiente loca
 ### 2. Estrutura de Pastas Essencial
 Para que o script funcione corretamente, o dataset `.csv` **deve** estar na seguinte estrutura de pastas, a partir da raiz do projeto. Crie as pastas `Prep_A1` e `AutomotivePrice` se elas não existirem e coloque o arquivo `vehicle_price_prediction.csv` dentro delas.
 
+```bash
 .
 ├── Prep_A1/
 │   └── AutomotivePrice/
 │       └── vehicle_price_prediction.csv  <-- COLOQUE O ARQUIVO CSV AQUI
 ├── seu_script_de_analise.py
 └── README.md
-
+```
 
 ### 3. Configuração do Ambiente
 Abra seu terminal, clone o repositório e configure o ambiente virtual.
 
-```bash
+
 # Clone este repositório
 git clone [URL_DO_SEU_REPOSITORIO_AQUI]
 cd [NOME_DA_PASTA_DO_REPOSITORIO]
