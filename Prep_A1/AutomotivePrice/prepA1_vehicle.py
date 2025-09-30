@@ -6,9 +6,7 @@ from pathlib import Path  #biblioteca para manipulação de caminhos
 # ==============================================================================
 # DEFINIÇÃO DE CAMINHOS
 # ==============================================================================
-# Caminho para o arquivo de dados
 caminho_csv = Path("Prep_A1/AutomotivePrice/vehicle_price_prediction.csv")
-# Pasta onde o CSV está localizado. As imagens serão salvas aqui.
 pasta_destino = caminho_csv.parent
 
 # ==============================================================================
@@ -18,11 +16,11 @@ pasta_destino = caminho_csv.parent
 base = pd.read_csv(caminho_csv)
 base.columns = base.columns.str.strip().str.replace('\n', '')
 pd.set_option('display.max_columns', None)
-colunas_para_remover = ['year', 'mileage_per_year', 'trim', 'brand_popularity']
+colunas_para_remover = ['year', 'mileage_per_year', 'trim', 'brand_popularity', 'exterior_color', 'interior_color']
 base.drop(columns=colunas_para_remover, inplace=True)
-
 print("Colunas removidas com sucesso! Colunas restantes no dataset:")
 print(base.columns)
+
 print("\n--- 1. Verificação de Valores Nulos (NaN) ---")
 print(base.isnull().sum())
 print("\n--- 2. Verificação de Valores Vazios ('') em colunas de texto ---")
