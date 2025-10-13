@@ -2,18 +2,41 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 import glob # Biblioteca para encontrar arquivos que correspondem a um padrão
+import zipfile # Biblioteca para manipular arquivos ZIP
 
 # ==============================================================================
 # DEFINIÇÃO DE CAMINHOS
 # ==============================================================================
-# O caminho para a PASTA que contém os 10 arquivos CSV
-caminho_pasta_csv = Path("Projeto_CyberSec/IDS2018") 
-# Caminho para o arquivo do banco de dados na pasta principal do projeto
-caminho_db = caminho_pasta_csv.parent / "DDoS2018.db" 
+# Caminho da pasta do projeto principal
+caminho_projeto = Path("Projeto_CyberSec")
+# Caminho do arquivo ZIP
+caminho_zip = caminho_projeto / "IDS2018.zip"
+# O caminho para a PASTA onde os arquivos CSV ficarão
+caminho_pasta_csv = caminho_projeto / "IDS2018"
+# Caminho para o arquivo do banco de dados (agora dentro da pasta dos CSVs)
+caminho_db = caminho_pasta_csv / "DDoS2018.db" 
 NOME_TABELA = 'DDoS_data' # Nome da nossa tabela no DB
 
-print(f"Buscando arquivos CSV na pasta: {caminho_pasta_csv}")
-print(f"O banco de dados será salvo em: {caminho_db}")
+# ==============================================================================
+# ETAPA 0: DESCOMPACTAR OS DADOS (SE NECESSÁRIO)
+# ==============================================================================
+print(f"--- Verificando a necessidade de descompactação ---")
+# Cria a pasta de destino se ela não existir
+caminho_pasta_csv.mkdir(exist_ok=True)
+# Verifica se já existem arquivos CSV na pasta de destino
+arquivos_csv_existentes = glob.glob(str(caminho_pasta_csv / "*.csv"))
+
+if not arquivos_csv_existentes and caminho_zip.exists():
+    print(f"Arquivos CSV não encontrados. Descompactando '{caminho_zip.name}' para '{caminho_pasta_csv}'...")
+    with zipfile.ZipFile(caminho_zip, 'r') as zip_ref:
+        zip_ref.extractall(caminho_pasta_csv)
+    print("Arquivos descompactados com sucesso!")
+elif not arquivos_csv_existentes and not caminho_zip.exists():
+    print(f"ERRO: A pasta '{caminho_pasta_csv}' está vazia e o arquivo '{caminho_zip.name}' não foi encontrado.")
+    # Encerra o script se não houver dados para processar
+    exit()
+else:
+    print("Arquivos CSV já existem na pasta. Pulando a descompactação.")
 
 # ==============================================================================
 # VERIFICAÇÃO E CRIAÇÃO DO BANCO DE DADOS (SE NECESSÁRIO)
