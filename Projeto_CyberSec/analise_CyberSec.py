@@ -16,6 +16,7 @@ caminho_pasta_csv = caminho_projeto / "IDS2018"
 # Caminho para o arquivo do banco de dados (agora dentro da pasta dos CSVs)
 caminho_db = caminho_pasta_csv / "DDoS2018.db" 
 NOME_TABELA = 'DDoS_data' # Nome da nossa tabela no DB
+NOME_TABELA_NOVA = f"{NOME_TABELA}_new"
 
 # ==============================================================================
 # ETAPA 0: DESCOMPACTAR OS DADOS (SE NECESSÁRIO)
@@ -185,3 +186,99 @@ try:
 
 except Exception as e:
     print(f"\nOcorreu um erro durante a análise da amostra: {e}")
+
+# ==============================================================================
+# CORREÇÃO DOS TIPOS DE DADOS NO BANCO DE DADOS (SE NECESSÁRIO)
+# ==============================================================================
+print("\n" + "="*70)
+print(f"--- ETAPA FINAL: Verificando e corrigindo os tipos de dados na tabela '{NOME_TABELA}' ---")
+
+try:
+    conn = sqlite3.connect(caminho_db)
+    
+    # Verifica os tipos atuais da tabela principal
+    schema_atual_df = pd.read_sql_query(f"PRAGMA table_info('{NOME_TABELA}');", conn)
+    tipos_atuais = dict(zip(schema_atual_df['name'], schema_atual_df['type']))
+
+    # Se a maioria das colunas (exceto 'Label', 'Timestamp', etc.) ainda for TEXT, a conversão é necessária.
+    # Contamos quantos tipos 'TEXT' existem.
+    text_count = sum(1 for tipo in tipos_atuais.values() if tipo == 'TEXT')
+
+    # Se menos de 10 colunas são TEXT, assumimos que a conversão já foi feita.
+    if text_count < 10:
+        print("\nTipos de dados já parecem estar corrigidos. Nenhuma ação necessária.")
+        conn.close()
+    else:
+        print("\nTipos de dados precisam ser corrigidos. Iniciando o processo de conversão (pode levar alguns minutos)...")
+        
+        # 1. Analisar uma amostra para definir o schema ideal
+        print("\nPasso 1/5: Analisando amostra para definir os tipos de dados corretos...")
+        SAMPLE_SIZE = 200000
+        df_amostra = pd.read_sql_query(f"SELECT * FROM {NOME_TABELA} LIMIT {SAMPLE_SIZE}", conn)
+        
+        dtype_map = {}
+        for col in df_amostra.columns:
+            try:
+                coluna_convertida = pd.to_numeric(df_amostra[col], errors='coerce')
+                if df_amostra[col].dtype == 'object' and coluna_convertida.dtype != 'object':
+                    # Usa 'INTEGER' se não houver casas decimais na amostra, senão 'REAL' (float)
+                    if (coluna_convertida.dropna() % 1 == 0).all():
+                         dtype_map[col] = 'INTEGER'
+                    else:
+                         dtype_map[col] = 'REAL'
+                else:
+                    dtype_map[col] = 'TEXT' # Mantém como texto se não for conversível
+            except (ValueError, TypeError):
+                 dtype_map[col] = 'TEXT'
+
+        print("Tipos de dados ideais definidos com sucesso.")
+
+        # 2. Criar a nova tabela com os tipos corretos
+        print(f"\nPasso 2/5: Criando nova tabela '{NOME_TABELA_NOVA}' com os tipos corretos...")
+
+        # Garante que qualquer resquício de uma execução anterior seja limpo
+        print("  - Verificando e limpando resquícios de execuções anteriores...")
+        conn.execute(f"DROP TABLE IF EXISTS {NOME_TABELA_NOVA}")
+
+        # Cria a instrução SQL para a nova tabela
+        create_table_sql = f"CREATE TABLE {NOME_TABELA_NOVA} ({', '.join([f'\"{col}\" {tipo}' for col, tipo in dtype_map.items()])})"
+        conn.execute(create_table_sql)
+        print("Nova tabela criada.")
+
+        # 3. Copiar dados da tabela antiga para a nova em chunks (para não usar muita memória)
+        print(f"\nPasso 3/5: Copiando dados para a nova tabela (isso pode ser demorado)...")
+        chunk_reader = pd.read_sql_query(f"SELECT * FROM {NOME_TABELA}", conn, chunksize=100000)
+        
+        for i, chunk in enumerate(chunk_reader):
+            print(f"  - Processando e inserindo o chunk {i+1}...")
+            # Garante que os tipos do chunk estão corretos antes de inserir
+            chunk_convertido = chunk.astype({col: str for col in chunk.columns if dtype_map[col] == 'TEXT'})
+            chunk_convertido.to_sql(NOME_TABELA_NOVA, conn, if_exists='append', index=False)
+        print("Cópia de dados concluída.")
+
+        # 4. Apagar a tabela antiga
+        print(f"\nPasso 4/5: Apagando a tabela antiga '{NOME_TABELA}'...")
+        conn.execute(f"DROP TABLE {NOME_TABELA}")
+        print("Tabela antiga apagada.")
+
+        # 5. Renomear a nova tabela
+        print(f"\nPasso 5/5: Renomeando '{NOME_TABELA_NOVA}' para '{NOME_TABELA}'...")
+        conn.execute(f"ALTER TABLE {NOME_TABELA_NOVA} RENAME TO {NOME_TABELA}")
+        print("Tabela renomeada com sucesso!")
+
+        # Finaliza a transação
+        conn.commit()
+        conn.close()
+
+        print("\n\n--- Processo de Conversão Concluído! ---")
+        print("O banco de dados foi otimizado com os tipos de dados corretos.")
+
+        # Mostra o novo schema para confirmação
+        print("\n--- Novo Esquema da Tabela ---")
+        conn = sqlite3.connect(caminho_db)
+        schema_final_df = pd.read_sql_query(f"PRAGMA table_info('{NOME_TABELA}');", conn)
+        conn.close()
+        print(schema_final_df[['name', 'type']])
+
+except Exception as e:
+    print(f"\nOcorreu um erro durante a otimização do banco de dados: {e}")
