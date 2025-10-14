@@ -441,9 +441,6 @@ except Exception as e:
 
 
 
-
-
-
 horario_fim = datetime.now()
 horario_fim_formatado = horario_fim.strftime("%H:%M:%S")
 
