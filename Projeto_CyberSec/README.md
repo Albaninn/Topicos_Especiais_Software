@@ -1,6 +1,6 @@
 https://www.unb.ca/cic/datasets/ids-2018.html
 
-### Features Extraídas pelo CICFlowMeter-V3
+### IDS2018 - Features Extraídas pelo CICFlowMeter-V3
 
 | Feature Name      | Description                                                                                  |
 |-------------------|----------------------------------------------------------------------------------------------|

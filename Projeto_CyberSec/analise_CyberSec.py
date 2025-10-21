@@ -299,149 +299,104 @@ try:
 
 except Exception as e:
     print(f"\nOcorreu um erro durante a otimização do banco de dados: {e}")
-'''
+
 # ==============================================================================
-# GERAÇÃO DOS GRÁFICOS
+# GERAÇÃO DOS NOVOS GRÁFICOS DE ANÁLISE
 # ==============================================================================
 print("\n" + "="*70)
-print("\n--- Gerando gráfico de barras da distribuição de tráfego ---")
+print("\n--- Gerando novos gráficos de análise ---")
 
+# --- GRÁFICO 1: BARRAS - IMPACTO FINANCEIRO POR TIPO DE ATAQUE ---
 try:
+    print("Gerando Gráfico 1: Impacto Financeiro por Tipo de Ataque...")
     conn = sqlite3.connect(caminho_db)
-    # Pega os dados já ordenados pela contagem
-    query = f"SELECT Label, COUNT(*) as count FROM {NOME_TABELA} GROUP BY Label ORDER BY count ASC"
-    df_counts = pd.read_sql_query(query, conn)
+    query = f'''
+        SELECT "Attack Type", SUM("Financial Loss (in Million $)") as Total_Loss
+        FROM {NOME_TABELA}
+        GROUP BY "Attack Type"
+        ORDER BY Total_Loss DESC
+    '''
+    df_loss = pd.read_sql_query(query, conn)
     conn.close()
 
-    # --- Configurações do Gráfico ---
     plt.style.use('seaborn-v0_8-whitegrid')
     plt.figure(figsize=(12, 8))
-
-    # Cria o gráfico de barras horizontais
-    bars = plt.barh(df_counts['Label'], df_counts['count'])
+    sns.barplot(data=df_loss, x="Attack Type", y="Total_Loss", palette="viridis")
     
-    # Adiciona os valores no final de cada barra
-    for bar in bars:
-        width = bar.get_width()
-        plt.text(width, bar.get_y() + bar.get_height()/2.0, f' {width:,.0f}'.replace(',', '.'), 
-                 va='center', ha='left', fontsize=10)
-
-    # Títulos e formatação
-    plt.title('Contagem de Tipos de Tráfego no Dataset', fontsize=16)
-    plt.xlabel('Número de Registros', fontsize=12)
-    plt.ylabel('Tipo de Tráfego', fontsize=12)
-    # Usa escala logarítmica se a diferença entre os valores for muito grande
-    if df_counts['count'].max() / df_counts['count'].min() > 100:
-        plt.xscale('log')
-        plt.xlabel('Número de Registros (Escala Logarítmica)', fontsize=12)
-        
-    plt.tight_layout() # Ajusta o layout para não cortar as legendas
-    caminho_completo_para_salvar = caminho_pasta_csv / "imagem1.png"
-    plt.savefig(caminho_completo_para_salvar)
+    plt.title('Impacto Financeiro Total por Tipo de Ataque', fontsize=16)
+    plt.xlabel('Tipo de Ataque (Código)', fontsize=12)
+    plt.ylabel('Prejuízo Total (em Milhões de $)', fontsize=12)
+    plt.xticks(rotation=45, ha='right')
+    
+    caminho_salvar1 = caminho_pasta_csv / "grafico_1_impacto_financeiro.png"
+    plt.tight_layout()
+    plt.savefig(caminho_salvar1)
+    print(f"Gráfico 1 salvo em: {caminho_salvar1}")
+    plt.close() # Fecha a figura para liberar memória
 
 except Exception as e:
-    print(f"\nOcorreu um erro: {e}")
+    print(f"\nOcorreu um erro ao gerar o Gráfico 1: {e}")
 
-print("\n" + "+"*70)
-print("\n--- Gerando Gráfico de Dispersão ---")
 
+# --- GRÁFICO 2: DISPERSÃO - USUÁRIOS AFETADOS VS PREJUÍZO FINANCEIRO ---
 try:
+    print("\nGerando Gráfico 2: Usuários Afetados vs. Prejuízo Financeiro...")
     conn = sqlite3.connect(caminho_db)
-
-    # Para não sobrecarregar a memória e o gráfico, pegamos uma amostra aleatória de 100.000 registros
-    # O comando TABLESAMPLE(100000 ROWS) é mais eficiente que LIMIT em alguns DBs, mas aqui usamos uma query mais simples
-    # Primeiro, contamos o total para pegar uma amostra representativa
-    total_rows = pd.read_sql_query(f"SELECT COUNT(*) FROM {NOME_TABELA}", conn).iloc[0,0]
-    sample_size = min(100000, total_rows) # Garante que não tentamos pegar uma amostra maior que o DB
-    
-    # Query para pegar uma amostra aleatória
-    query = f"SELECT \"Flow Duration\", \"Flow Pkts/s\", Label FROM {NOME_TABELA} ORDER BY RANDOM() LIMIT {sample_size}"
-    
-    df_sample = pd.read_sql_query(query, conn)
+    query = f'''
+        SELECT "Number of Affected Users", "Financial Loss (in Million $)"
+        FROM {NOME_TABELA}
+    '''
+    df_scatter = pd.read_sql_query(query, conn)
     conn.close()
 
-    print(f"Amostra de {len(df_sample)} registros carregada. Preparando o gráfico...")
-
-    # Limpeza de dados infinitos que podem ocorrer em colunas de taxa
-    df_sample.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df_sample.dropna(subset=['Flow Duration', 'Flow Pkts/s'], inplace=True)
-
-    # Para clareza, vamos focar no tráfego Benigno e nos 2 tipos de ataque mais comuns na amostra
-    top_labels = df_sample['Label'].value_counts().nlargest(3).index
-    df_filtered = df_sample[df_sample['Label'].isin(top_labels)]
-
-    # --- Configurações do Gráfico ---
     plt.style.use('seaborn-v0_8-whitegrid')
-    plt.figure(figsize=(14, 8))
-    
-    sns.scatterplot(
-        data=df_filtered,
-        x="Flow Duration",
-        y="Flow Pkts/s",
-        hue="Label", # Cor dos pontos baseada no tipo de tráfego
-        alpha=0.6,   # Transparência dos pontos
-        s=50         # Tamanho dos pontos
+    plt.figure(figsize=(12, 8))
+    sns.regplot(
+        data=df_scatter, 
+        x="Number of Affected Users", 
+        y="Financial Loss (in Million $)",
+        scatter_kws={'alpha':0.5, 's':50},
+        line_kws={'color':'red'}
     )
-
-    # Títulos e formatação
-    plt.title('Duração do Fluxo vs. Pacotes por Segundo', fontsize=18)
-    plt.xlabel('Duração do Fluxo (microssegundos) - Escala Logarítmica', fontsize=12)
-    plt.ylabel('Pacotes por Segundo - Escala Logarítmica', fontsize=12)
-    plt.xscale('log') # Escala logarítmica é essencial para dados com grande variação
-    plt.yscale('log')
-    plt.legend(title='Tipo de Tráfego')
     
+    plt.title('Relação entre Usuários Afetados e Prejuízo Financeiro', fontsize=16)
+    plt.xlabel('Número de Usuários Afetados', fontsize=12)
+    plt.ylabel('Prejuízo (em Milhões de $)', fontsize=12)
+    
+    caminho_salvar2 = caminho_pasta_csv / "grafico_2_usuarios_vs_prejuizo.png"
     plt.tight_layout()
-    caminho_completo_para_salvar = caminho_pasta_csv / "imagem2.png"
-    plt.savefig(caminho_completo_para_salvar)
+    plt.savefig(caminho_salvar2)
+    print(f"Gráfico 2 salvo em: {caminho_salvar2}")
+    plt.close()
 
 except Exception as e:
-    print(f"\nOcorreu um erro: {e}")
+    print(f"\nOcorreu um erro ao gerar o Gráfico 2: {e}")
 
-print("\n" + "+"*70)
-print("\n--- Gerando Box Plot ---")
 
+# --- GRÁFICO 3: HISTOGRAMA - TEMPO DE RESOLUÇÃO DE INCIDENTES ---
 try:
+    print("\nGerando Gráfico 3: Distribuição do Tempo de Resolução...")
     conn = sqlite3.connect(caminho_db)
-
-    # Pegamos uma amostra aleatória para a análise
-    total_rows = pd.read_sql_query(f"SELECT COUNT(*) FROM {NOME_TABELA}", conn).iloc[0,0]
-    sample_size = min(200000, total_rows)
-    query = f"SELECT \"Pkt Size Avg\", Label FROM {NOME_TABELA} ORDER BY RANDOM() LIMIT {sample_size}"
-    
-    df_sample = pd.read_sql_query(query, conn)
+    query = f'SELECT "Incident Resolution Time (in Hours)" FROM {NOME_TABELA}'
+    df_hist = pd.read_sql_query(query, conn)
     conn.close()
 
-    print(f"Amostra de {len(df_sample)} registros carregada. Preparando o gráfico...")
-
-    # Focamos nos 5 tipos de tráfego mais comuns para manter o gráfico legível
-    top_labels = df_sample['Label'].value_counts().nlargest(5).index
-    df_filtered = df_sample[df_sample['Label'].isin(top_labels)]
-
-    # --- Configurações do Gráfico ---
     plt.style.use('seaborn-v0_8-whitegrid')
-    plt.figure(figsize=(14, 8))
+    plt.figure(figsize=(12, 8))
+    sns.histplot(df_hist["Incident Resolution Time (in Hours)"], kde=True, bins=30)
     
-    sns.boxplot(
-        data=df_filtered,
-        x="Label",
-        y="Pkt Size Avg",
-        order=top_labels # Ordena as caixas pela frequência
-    )
-
-    # Títulos e formatação
-    plt.title('Distribuição do Tamanho Médio de Pacote por Tipo de Tráfego', fontsize=18)
-    plt.xlabel('Tipo de Tráfego', fontsize=12)
-    plt.ylabel('Tamanho Médio do Pacote (bytes)', fontsize=12)
-    plt.xticks(rotation=15, ha='right') # Rotaciona os rótulos do eixo X para não sobrepor
+    plt.title('Distribuição do Tempo de Resolução de Incidentes', fontsize=16)
+    plt.xlabel('Tempo de Resolução (em Horas)', fontsize=12)
+    plt.ylabel('Frequência (Nº de Incidentes)', fontsize=12)
     
+    caminho_salvar3 = caminho_pasta_csv / "grafico_3_dist_tempo_resolucao.png"
     plt.tight_layout()
-    caminho_completo_para_salvar = caminho_pasta_csv / "imagem3.png"
-    plt.savefig(caminho_completo_para_salvar)
+    plt.savefig(caminho_salvar3)
+    print(f"Gráfico 3 salvo em: {caminho_salvar3}")
+    plt.close()
 
 except Exception as e:
-    print(f"\nOcorreu um erro: {e}")
-'''
+    print(f"\nOcorreu um erro ao gerar o Gráfico 3: {e}")
 
 horario_fim = datetime.now()
 horario_fim_formatado = horario_fim.strftime("%H:%M:%S")
