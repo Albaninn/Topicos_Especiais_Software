@@ -19,12 +19,12 @@ print(f"Início: {horario_inicio_formatado}")
 # Caminho da pasta do projeto principal
 caminho_projeto = Path("Projeto_CyberSec")
 # Caminho do arquivo ZIP
-caminho_zip = caminho_projeto / "CyberSec.zip"
+caminho_zip = caminho_projeto / "IDS2018.zip"
 # O caminho para a PASTA onde os arquivos CSV ficarão
-caminho_pasta_csv = caminho_projeto / "CyberSec"
+caminho_pasta_csv = caminho_projeto / "IDS2018"
 # Caminho para o arquivo do banco de dados (agora dentro da pasta dos CSVs)
-caminho_db = caminho_pasta_csv / "CyberSec.db" 
-NOME_TABELA = 'CyberSec_data' # Nome da nossa tabela no DB
+caminho_db = caminho_pasta_csv / "DDoS2018.db" 
+NOME_TABELA = 'DDoS_data' # Nome da nossa tabela no DB
 NOME_TABELA_NOVA = f"{NOME_TABELA}_new"
 
 # ==============================================================================
@@ -133,7 +133,7 @@ except Exception as e:
     print(f"\nOcorreu um erro ao ler o esquema: {e}")
 
 # ==============================================================================
-# ANÁLISE DE NULOS E SUGESTÃO DE TIPOS
+# ANÁLISE DE NULOS E SUGESTÃO DE TIPOS (NOVO BLOCO)
 # ==============================================================================
 print("\n" + "="*70)
 print("--- Análise de Amostra: Verificação de Nulos e Sugestão de Tipos ---")
@@ -299,7 +299,7 @@ try:
 
 except Exception as e:
     print(f"\nOcorreu um erro durante a otimização do banco de dados: {e}")
-'''
+
 # ==============================================================================
 # GERAÇÃO DOS GRÁFICOS
 # ==============================================================================
@@ -441,7 +441,8 @@ try:
 
 except Exception as e:
     print(f"\nOcorreu um erro: {e}")
-'''
+
+
 
 horario_fim = datetime.now()
 horario_fim_formatado = horario_fim.strftime("%H:%M:%S")
